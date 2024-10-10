@@ -1,4 +1,8 @@
+import { notFound } from "../error/NotFoundError";
 import { Console } from "../models/console.model";
+import { Game } from "../models/game.model";
+import { Review } from "../models/review.model";
+const { Op } = require('sequelize');
 
 export class ConsoleService {
 
@@ -17,15 +21,35 @@ export class ConsoleService {
     name: string,
     manufacturer: string
   ): Promise<Console> {
-    return Console.create({ id: -1, name: name, manufacturer: manufacturer });
+    return Console.create({ name: name, manufacturer: manufacturer });
   }
 
-  // Supprime une console par ID
   public async deleteConsole(id: number): Promise<void> {
     const console = await Console.findByPk(id);
-    if (console) {
-      console.destroy();
+    const games = await Game.findAll({
+      where : {console_id : id}
+    });
+    const gameIds = games.map(game => game.id);
+
+    const reviews = await Review.findAll({
+      where: {
+        game_id: {
+          [Op.in]: gameIds
+        }
+      }
+    });
+
+    if(!console){
+      notFound("Console with id : "+id);
     }
+
+    if(reviews.length > 0){
+      const error = new Error("Can't delete console which has reviews on it's games");
+      (error as any).status = 404;
+      throw error;
+    }
+
+    console.destroy();
   }
 
   // Met à jour une console
@@ -35,7 +59,7 @@ export class ConsoleService {
     manufacturer?: string
   ): Promise<Console | null> {
     const console = await Console.findByPk(id);
-    if (console) {
+    if (console !== null) {
       if (name) console.name = name;
       if (manufacturer) console.manufacturer = manufacturer;
       await console.save();
