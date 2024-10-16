@@ -73,6 +73,16 @@ export class ReviewService {
         }
         return null;
       }
+
+      public async deleteReview(id: number): Promise<void> {
+        const review = await Review.findByPk(id);
+
+        if(!review){
+          notFound("Review with id : "+id);
+        }
+
+        review.destroy();
+      }
 }
 
 export const reviewService = new ReviewService();
