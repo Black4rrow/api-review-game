@@ -1,6 +1,8 @@
 import { Body, Controller,Path, Get, Patch, Post, Route, Tags, Delete } from "tsoa";
 import { GameDTO } from "../dto/game.dto";
+import { ReviewDTO } from "../dto/review.dto";
 import { gameService } from "../services/game.service";
+import { reviewService } from "../services/review.service";
 import { notFound } from "../error/NotFoundError";
 
 @Route("games")
@@ -18,6 +20,18 @@ export class GameController extends Controller {
       notFound("Game with id : "+id);
     }
     return game;
+  }
+
+  @Get("{id}/reviews")
+  public async getConsoleGames(@Path() id: number): Promise<ReviewDTO[] | null> {
+    const game = await gameService.getGameById(id);
+    if (!game) {
+      notFound("Game with id : " + id);
+    }
+
+    const allReviews: ReviewDTO[] = await reviewService.getAllReviews();
+    const filteredReviews = allReviews.filter(review => review.game?.id === id);
+    return filteredReviews;
   }
 
   @Post("/")

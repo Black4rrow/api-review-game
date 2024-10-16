@@ -1,7 +1,9 @@
 import { Controller, Get, Post, Delete, Route, Path, Body, Tags, Patch } from "tsoa";
 import { consoleService } from "../services/console.service";
+import { gameService } from "../services/game.service";
 import { ConsoleDTO } from "../dto/console.dto";
 import { notFound } from "../error/NotFoundError";
+import { GameDTO } from "../dto/game.dto";
 
 @Route("consoles")
 @Tags("Consoles")
@@ -20,6 +22,18 @@ export class ConsoleController extends Controller {
       notFound("Console with id : "+id);
     }
     return console;
+  }
+
+  @Get("{id}/games")
+  public async getConsoleGames(@Path() id: number): Promise<GameDTO[] | null> {
+    const console = await consoleService.getConsoleById(id);
+    if (!console) {
+      notFound("Console with id : " + id);
+    }
+
+    const allGames: GameDTO[] = await gameService.getAllGames();
+    const filteredGames = allGames.filter(game => game.console?.id === id);
+    return filteredGames;
   }
 
   // Crée une nouvelle console
