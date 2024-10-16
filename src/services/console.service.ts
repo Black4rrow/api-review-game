@@ -49,6 +49,10 @@ export class ConsoleService {
       throw error;
     }
 
+    await Game.destroy({
+      where: { console_id: id }
+    });
+
     console.destroy();
   }
 
